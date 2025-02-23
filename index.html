@@ -89,7 +89,7 @@
     <div id="counter">Flips: 0</div>
     <div id="title">
         <h1>FlipTable</h1>
-        <p>Created by Rururu & Tututu</p>
+        <p>Created by Rurururu & Tutututu</p>
     </div>
 
     <!-- Mute and dropdown container -->
@@ -120,10 +120,10 @@
 
     <!-- About Us Section -->
     <div id="aboutUs">
-        <button id="closeAboutUs">x</button>
+        <button id="closeAboutUs">×</button>
         <h2>Why This App?</h2>
-        <p>How often have you wanted to channel your frustration by flipping a table? Are you scared that people will judge you for it? Fear not, because you can now flip tables whenever and wherever you want! Don't let societal norms or the constraints of physical reality hold you back.</p>
-        <p>If you have feature requests, please reach out to Rururu and Tututu. If you don't know who they are, you probably don't have the privilege to request features anyway :)</p>
+        <p>How often have you wanted to channel your frustration by flipping a table? Are you scared that people will judge you for it? Fear not, because you can now flip tables whenever and wherever you want! Don’t let societal norms or the constraints of physical reality hold you back.</p>
+        <p>If you have feature requests, please reach out to Rurururu and Tutututu. If you don’t know who they are, you probably don’t have the privilege to request features anyway.</p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -187,25 +187,23 @@
         camera.position.y = 3;
         camera.lookAt(0, 0, 0);
 
-        // Mouse interaction
+        // Interaction variables (for both mouse and touch)
         let isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
+        let previousPosition = { x: 0, y: 0 }; // Renamed for clarity (works for both mouse and touch)
 
+        // Mouse event listeners
         document.addEventListener('mousedown', (e) => {
             isDragging = true;
-            previousMousePosition = { x: e.clientX, y: e.clientY };
+            previousPosition = { x: e.clientX, y: e.clientY };
         });
 
         document.addEventListener('mousemove', (e) => {
             if (isDragging && !isFlipping) {
-                const deltaX = e.clientX - previousMousePosition.x;
-                const deltaY = e.clientY - previousMousePosition.y;
-                
-                // Increased flip speed from 0.005 to 0.01
+                const deltaX = e.clientX - previousPosition.x;
+                const deltaY = e.clientY - previousPosition.y;
                 angularVelocity.x = deltaY * 0.01;
                 angularVelocity.z = -deltaX * 0.01;
-                
-                previousMousePosition = { x: e.clientX, y: e.clientY };
+                previousPosition = { x: e.clientX, y: e.clientY };
             }
         });
 
@@ -214,7 +212,32 @@
                 isFlipping = true;
                 flipCount++;
                 document.getElementById('counter').textContent = `Flips: ${flipCount}`;
-                // Play the flip sound when the flip starts
+                document.getElementById('flipSound').play();
+            }
+            isDragging = false;
+        });
+
+        // Touch event listeners for mobile swipe
+        document.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            previousPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging && !isFlipping) {
+                const deltaX = e.touches[0].clientX - previousPosition.x;
+                const deltaY = e.touches[0].clientY - previousPosition.y;
+                angularVelocity.x = deltaY * 0.01;
+                angularVelocity.z = -deltaX * 0.01;
+                previousPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (isDragging && !isFlipping) {
+                isFlipping = true;
+                flipCount++;
+                document.getElementById('counter').textContent = `Flips: ${flipCount}`;
                 document.getElementById('flipSound').play();
             }
             isDragging = false;
@@ -234,7 +257,7 @@
 
         muteButton.addEventListener('click', () => {
             flipSound.muted = !flipSound.muted;
-            muteButton.textContent = flipSound.muted ? "Unmute" : "Mute";  // Toggle button text
+            muteButton.textContent = flipSound.muted ? "Unmute" : "Mute";
         });
 
         // About Us Section toggle
@@ -255,16 +278,12 @@
             requestAnimationFrame(animate);
 
             if (isFlipping) {
-                // Apply physics
                 velocity.y += gravity;
                 tableGroup.position.y += velocity.y;
                 tableGroup.rotation.x += angularVelocity.x;
                 tableGroup.rotation.z += angularVelocity.z;
-
-                // Damping
                 angularVelocity.multiplyScalar(0.98);
 
-                // Ground collision
                 if (tableGroup.position.y < 0) {
                     tableGroup.position.y = 0;
                     velocity.y = -velocity.y * 0.5;
