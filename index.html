@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FlipTable</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #counter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+        }
+        #title {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #title h1 {
+            margin: 0;
+            font-size: 36px;
+        }
+        #title p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+        #colorSelectContainer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+        }
+        #muteButton {
+            padding: 10px;
+            font-size: 16px;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px; /* Space between mute button and dropdown */
+        }
+        #colorSelect {
+            font-size: 16px;
+            padding: 5px;
+        }
+        #questionMark {
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        #aboutUs {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            display: none;
+            z-index: 10;
+            overflow-y: auto;
+            max-height: 60%;
+        }
+        #aboutUs h2 {
+            margin-top: 0;
+        }
+        #closeAboutUs {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="counter">Flips: 0</div>
+    <div id="title">
+        <h1>FlipTable</h1>
+        <p>Created by Rururu & Tututu</p>
+    </div>
+
+    <!-- Mute and dropdown container -->
+    <div id="colorSelectContainer">
+        <!-- Mute button -->
+        <button id="muteButton">Unmute</button>
+
+        <!-- Color dropdown -->
+        <select id="colorSelect">
+            <option value="0xD2B48C">Light Tan (Default)</option>
+            <option value="0x8B4513">Saddle Brown</option>
+            <option value="0xA0522D">Sienna</option>
+            <option value="0xCD853F">Peru</option>
+            <option value="0xDEB887">Burlywood</option>
+            <option value="0xF4A460">Sandy Brown</option>
+            <option value="0xD2691E">Chocolate</option>
+            <option value="0x8B5A2B">Dark Tan</option>
+            <option value="0xA67B5B">Coffee</option>
+            <option value="0x5C4033">Dark Wood</option>
+        </select>
+
+        <!-- Question Mark Icon -->
+        <span id="questionMark">?</span>
+    </div>
+
+    <!-- Sound effect added -->
+    <audio id="flipSound" src="flip_sound.mp3" preload="auto" muted></audio>
+
+    <!-- About Us Section -->
+    <div id="aboutUs">
+        <button id="closeAboutUs">x</button>
+        <h2>Why This App?</h2>
+        <p>How often have you wanted to channel your frustration by flipping a table? Are you scared that people will judge you for it? Fear not, because you can now flip tables whenever and wherever you want! Don't let societal norms or the constraints of physical reality hold you back.</p>
+        <p>If you have feature requests, please reach out to Rururu and Tututu. If you don't know who they are, you probably don't have the privilege to request features anyway :)</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Table group
+        const tableGroup = new THREE.Group();
+        tableGroup.scale.set(1.96, 1.96, 1.96); // 40% larger than previous 1.4 scale
+
+        // Tabletop
+        const tabletopGeometry = new THREE.BoxGeometry(2, 0.2, 1);
+        const tableMaterial = new THREE.MeshPhongMaterial({ color: 0xD2B48C });
+        const tabletop = new THREE.Mesh(tabletopGeometry, tableMaterial);
+        tabletop.position.y = 0.6;
+        tableGroup.add(tabletop);
+
+        // Legs
+        const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 32);
+        const legMaterial = new THREE.MeshPhongMaterial({ color: 0xD2B48C });
+
+        const leg1 = new THREE.Mesh(legGeometry, legMaterial);
+        leg1.position.set(0.9, 0.3, 0.4);
+        tableGroup.add(leg1);
+
+        const leg2 = new THREE.Mesh(legGeometry, legMaterial);
+        leg2.position.set(-0.9, 0.3, 0.4);
+        tableGroup.add(leg2);
+
+        const leg3 = new THREE.Mesh(legGeometry, legMaterial);
+        leg3.position.set(0.9, 0.3, -0.4);
+        tableGroup.add(leg3);
+
+        const leg4 = new THREE.Mesh(legGeometry, legMaterial);
+        leg4.position.set(-0.9, 0.3, -0.4);
+        tableGroup.add(leg4);
+
+        scene.add(tableGroup);
+
+        // Physics variables
+        let velocity = new THREE.Vector3();
+        let angularVelocity = new THREE.Vector3();
+        const gravity = -0.004; // Reduced gravity for smoother flipping
+        let isFlipping = false;
+        let flipCount = 0;
+        let resetTimer = 0;
+
+        // Lighting
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(0, 5, 5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // Camera position
+        camera.position.z = 5;
+        camera.position.y = 3;
+        camera.lookAt(0, 0, 0);
+
+        // Mouse interaction
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        document.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && !isFlipping) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                
+                // Increased flip speed from 0.005 to 0.01
+                angularVelocity.x = deltaY * 0.01;
+                angularVelocity.z = -deltaX * 0.01;
+                
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging && !isFlipping) {
+                isFlipping = true;
+                flipCount++;
+                document.getElementById('counter').textContent = `Flips: ${flipCount}`;
+                // Play the flip sound when the flip starts
+                document.getElementById('flipSound').play();
+            }
+            isDragging = false;
+        });
+
+        // Color dropdown
+        const colorSelect = document.getElementById('colorSelect');
+        colorSelect.addEventListener('change', (e) => {
+            const newColor = parseInt(e.target.value);
+            tableMaterial.color.setHex(newColor);
+            legMaterial.color.setHex(newColor);
+        });
+
+        // Mute/unmute functionality
+        const muteButton = document.getElementById('muteButton');
+        const flipSound = document.getElementById('flipSound');
+
+        muteButton.addEventListener('click', () => {
+            flipSound.muted = !flipSound.muted;
+            muteButton.textContent = flipSound.muted ? "Unmute" : "Mute";  // Toggle button text
+        });
+
+        // About Us Section toggle
+        const questionMark = document.getElementById('questionMark');
+        const aboutUs = document.getElementById('aboutUs');
+        const closeAboutUs = document.getElementById('closeAboutUs');
+
+        questionMark.addEventListener('click', () => {
+            aboutUs.style.display = 'block';
+        });
+
+        closeAboutUs.addEventListener('click', () => {
+            aboutUs.style.display = 'none';
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isFlipping) {
+                // Apply physics
+                velocity.y += gravity;
+                tableGroup.position.y += velocity.y;
+                tableGroup.rotation.x += angularVelocity.x;
+                tableGroup.rotation.z += angularVelocity.z;
+
+                // Damping
+                angularVelocity.multiplyScalar(0.98);
+
+                // Ground collision
+                if (tableGroup.position.y < 0) {
+                    tableGroup.position.y = 0;
+                    velocity.y = -velocity.y * 0.5;
+                    if (Math.abs(velocity.y) < 0.01) {
+                        resetTimer += 0.016; // Approx 60 FPS
+                        if (resetTimer >= 5) {
+                            resetTable();
+                        }
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function resetTable() {
+            tableGroup.position.set(0, 0, 0);
+            tableGroup.rotation.set(0, 0, 0);
+            velocity.set(0, 0, 0);
+            angularVelocity.set(0, 0, 0);
+            isFlipping = false;
+            resetTimer = 0;
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
