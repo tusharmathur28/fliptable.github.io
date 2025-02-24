@@ -12,6 +12,14 @@
             font-family: Arial, sans-serif;
             font-size: 20px;
         }
+        #streakCounter {
+            position: absolute;
+            top: 40px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+        }
         #title {
             position: absolute;
             top: 10px;
@@ -58,7 +66,7 @@
             cursor: pointer;
             margin-left: 10px;
         }
-        #aboutUs, #pearEasterEgg {
+        #aboutUs, #pearEasterEgg, #featureRequest {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -73,10 +81,10 @@
             overflow-y: auto;
             max-height: 60%;
         }
-        #aboutUs h2, #pearEasterEgg h2 {
+        #aboutUs h2, #pearEasterEgg h2, #featureRequest h2 {
             margin-top: 0;
         }
-        #closeAboutUs, #closePearEasterEgg {
+        #closeAboutUs, #closePearEasterEgg, #closeFeatureRequest {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -86,10 +94,28 @@
             border: none;
             cursor: pointer;
         }
+        #featureForm {
+            display: flex;
+            flex-direction: column;
+        }
+        #featureForm textarea {
+            margin: 10px 0;
+            padding: 5px;
+            font-size: 14px;
+        }
+        #featureForm button {
+            padding: 5px;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="counter">Flips: 0</div>
+    <div id="streakCounter">Streak: 0</div>
     <div id="title">
         <h1>FlipTable</h1>
         <p>Created by Rururu and Tututu</p>
@@ -116,10 +142,21 @@
     <audio id="flipSound" src="flip_sound.mp3" preload="auto" muted></audio>
 
     <div id="aboutUs">
-        <button id="closeAboutUs">×</button>
+        <button id="closeAboutUs">x</button>
         <h2>Why This App?</h2>
-        <p>How often have you wanted to channel your frustration by flipping a table? Are you scared that people will judge you for it? Fear not, because you can now flip tables whenever and wherever you want! Don’t let societal norms or the constraints of physical reality hold you back.</p>
-        <p>If you have feature requests, please reach out to Rururu and Tututu. If you don’t know who they are, you probably don’t have the privilege to request features anyway :)</p>
+        <p>How often have you wanted to channel your frustration by flipping a table? Are you scared that people will judge you for it? Fear not, because you can now flip tables whenever and wherever you want! Don't let societal norms or the constraints of physical reality hold you back.</p>
+        <p>If you have feature requests, please reach out to Rururu and Tututu. If you don't know who they are, you probably don't have the privilege to request features anyway :)</p>
+        <button id="requestFeatureButton">Request a Feature</button>
+    </div>
+
+    <div id="featureRequest">
+        <button id="closeFeatureRequest">x</button>
+        <h2>Request a Feature</h2>
+        <p>Tell us how to make FlipTable even better! (Privileged users only ;))</p>
+        <form id="featureForm">
+            <textarea id="featureInput" rows="4" placeholder="Your brilliant idea here..."></textarea>
+            <button type="submit">Submit</button>
+        </form>
     </div>
 
     <div id="pearEasterEgg">
@@ -173,6 +210,9 @@
         let isFlipping = false;
         let flipCount = 0;
         let resetTimer = 0;
+        let streakCount = 0;
+        let lastFlipTime = 0;
+        const streakWindow = 2000; // 2 seconds window for streak
 
         // Lighting
         const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -207,10 +247,7 @@
 
         document.addEventListener('mouseup', () => {
             if (isDragging && !isFlipping) {
-                isFlipping = true;
-                flipCount++;
-                document.getElementById('counter').textContent = `Flips: ${flipCount}`;
-                document.getElementById('flipSound').play();
+                handleFlip();
             }
             isDragging = false;
         });
@@ -233,13 +270,27 @@
 
         document.addEventListener('touchend', () => {
             if (isDragging && !isFlipping) {
-                isFlipping = true;
-                flipCount++;
-                document.getElementById('counter').textContent = `Flips: ${flipCount}`;
-                document.getElementById('flipSound').play();
+                handleFlip();
             }
             isDragging = false;
         });
+
+        // Flip handling function
+        function handleFlip() {
+            isFlipping = true;
+            flipCount++;
+            document.getElementById('counter').textContent = `Flips: ${flipCount}`;
+            document.getElementById('flipSound').play();
+
+            const currentTime = Date.now();
+            if (currentTime - lastFlipTime <= streakWindow) {
+                streakCount++;
+            } else {
+                streakCount = 1;
+            }
+            lastFlipTime = currentTime;
+            document.getElementById('streakCounter').textContent = `Streak: ${streakCount}`;
+        }
 
         // Color dropdown with Easter egg
         const colorSelect = document.getElementById('colorSelect');
@@ -255,7 +306,7 @@
             }
         });
 
-        // Mute/unmute functionality
+        // Flip sound mute/unmute
         const muteButton = document.getElementById('muteButton');
         const flipSound = document.getElementById('flipSound');
         muteButton.addEventListener('click', () => {
@@ -263,18 +314,41 @@
             muteButton.textContent = flipSound.muted ? "Unmute" : "Mute";
         });
 
-        // Learn More button toggle
+        // Learn More and Feature Request toggles
         const learnMoreButton = document.getElementById('learnMoreButton');
         const aboutUs = document.getElementById('aboutUs');
         const closeAboutUs = document.getElementById('closeAboutUs');
+        const requestFeatureButton = document.getElementById('requestFeatureButton');
+        const featureRequest = document.getElementById('featureRequest');
+        const closeFeatureRequest = document.getElementById('closeFeatureRequest');
+
         learnMoreButton.addEventListener('click', () => {
             aboutUs.style.display = 'block';
         });
         closeAboutUs.addEventListener('click', () => {
             aboutUs.style.display = 'none';
         });
+        requestFeatureButton.addEventListener('click', () => {
+            aboutUs.style.display = 'none';
+            featureRequest.style.display = 'block';
+        });
+        closeFeatureRequest.addEventListener('click', () => {
+            featureRequest.style.display = 'none';
+        });
 
-        // Pear Easter Egg Section toggle
+        // Feature request form submission (demo alert)
+        const featureForm = document.getElementById('featureForm');
+        featureForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const featureInput = document.getElementById('featureInput').value;
+            if (featureInput.trim()) {
+                alert('Thanks for the suggestion! Rururu and Tututu will consider: "' + featureInput + '"');
+                document.getElementById('featureInput').value = '';
+                featureRequest.style.display = 'none';
+            }
+        });
+
+        // Pear Easter Egg toggle
         const closePearEasterEgg = document.getElementById('closePearEasterEgg');
         closePearEasterEgg.addEventListener('click', () => {
             pearEasterEgg.style.display = 'none';
