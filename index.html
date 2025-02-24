@@ -49,9 +49,12 @@
             font-size: 16px;
             padding: 5px;
         }
-        #questionMark {
-            font-size: 20px;
+        #learnMoreButton {
+            font-size: 16px;
+            padding: 5px 10px;
+            background-color: rgba(0,0,0,0.5);
             color: white;
+            border: none;
             cursor: pointer;
             margin-left: 10px;
         }
@@ -92,35 +95,26 @@
         <p>Created by Rururu and Tututu</p>
     </div>
 
-    <!-- Mute and dropdown container -->
     <div id="colorSelectContainer">
-        <!-- Mute button -->
         <button id="muteButton">Unmute</button>
-
-        <!-- Color dropdown -->
         <select id="colorSelect">
             <option value="0xD2B48C">Light Tan (Default)</option>
             <option value="0x8B4513">Saddle Brown</option>
             <option value="0xA0522D">Sienna</option>
             <option value="0xCD853F">Peru</option>
             <option value="0xDEB887">Burlywood</option>
-	    <option value="0xC1E88D">Pear</option> 
+            <option value="0xC1E88D">Pear</option> 
             <option value="0xF4A460">Sandy Brown</option>
             <option value="0xD2691E">Chocolate</option>
             <option value="0x8B5A2B">Dark Tan</option>
             <option value="0xA67B5B">Coffee</option>
             <option value="0x5C4033">Dark Wood</option>
-            
         </select>
-
-        <!-- Question Mark Icon -->
-        <span id="questionMark">?</span>
+        <button id="learnMoreButton">Learn More</button>
     </div>
 
-    <!-- Sound effect added -->
     <audio id="flipSound" src="flip_sound.mp3" preload="auto" muted></audio>
 
-    <!-- About Us Section -->
     <div id="aboutUs">
         <button id="closeAboutUs">×</button>
         <h2>Why This App?</h2>
@@ -128,7 +122,6 @@
         <p>If you have feature requests, please reach out to Rururu and Tututu. If you don’t know who they are, you probably don’t have the privilege to request features anyway :)</p>
     </div>
 
-    <!-- Pear Easter Egg Section -->
     <div id="pearEasterEgg">
         <button id="closePearEasterEgg">x</button>
         <h2>Pear Surprise!</h2>
@@ -159,23 +152,18 @@
         // Legs
         const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 32);
         const legMaterial = new THREE.MeshPhongMaterial({ color: 0xD2B48C });
-
         const leg1 = new THREE.Mesh(legGeometry, legMaterial);
         leg1.position.set(0.9, 0.3, 0.4);
         tableGroup.add(leg1);
-
         const leg2 = new THREE.Mesh(legGeometry, legMaterial);
         leg2.position.set(-0.9, 0.3, 0.4);
         tableGroup.add(leg2);
-
         const leg3 = new THREE.Mesh(legGeometry, legMaterial);
         leg3.position.set(0.9, 0.3, -0.4);
         tableGroup.add(leg3);
-
         const leg4 = new THREE.Mesh(legGeometry, legMaterial);
         leg4.position.set(-0.9, 0.3, -0.4);
         tableGroup.add(leg4);
-
         scene.add(tableGroup);
 
         // Physics variables
@@ -260,10 +248,10 @@
             const newColor = parseInt(e.target.value);
             tableMaterial.color.setHex(newColor);
             legMaterial.color.setHex(newColor);
-            if (newColor === 0xC1E88D) { // Pear selected
+            if (newColor === 0xC1E88D) {
                 pearEasterEgg.style.display = 'block';
             } else {
-                pearEasterEgg.style.display = 'none'; // Hide if another color is selected
+                pearEasterEgg.style.display = 'none';
             }
         });
 
@@ -275,11 +263,11 @@
             muteButton.textContent = flipSound.muted ? "Unmute" : "Mute";
         });
 
-        // About Us Section toggle
-        const questionMark = document.getElementById('questionMark');
+        // Learn More button toggle
+        const learnMoreButton = document.getElementById('learnMoreButton');
         const aboutUs = document.getElementById('aboutUs');
         const closeAboutUs = document.getElementById('closeAboutUs');
-        questionMark.addEventListener('click', () => {
+        learnMoreButton.addEventListener('click', () => {
             aboutUs.style.display = 'block';
         });
         closeAboutUs.addEventListener('click', () => {
@@ -294,10 +282,10 @@
 
         // Countdown timer to November 15, 2025
         const targetDate = new Date('November 15, 2025');
-        const currentDate = new Date(); // Uses current date (e.g., Feb 22, 2025, per system)
-        const timeDiff = targetDate - currentDate;
-        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Convert ms to days
-        document.getElementById('countdown').textContent = `Days until November 15, 2025: ${daysLeft}`;
+        const countdown = document.getElementById('countdown');
+        const timeDiff = targetDate - new Date();
+        const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        countdown.textContent = `Days until November 15, 2025: ${daysLeft}`;
 
         // Animation loop
         function animate() {
@@ -331,7 +319,6 @@
             resetTimer = 0;
         }
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
